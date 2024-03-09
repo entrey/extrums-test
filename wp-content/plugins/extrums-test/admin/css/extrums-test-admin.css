@@ -1,4 +1,55 @@
-/**
- * All of the CSS for your admin-specific functionality should be
- * included in this file.
- */
+.extrums {
+    margin: 3rem 1rem;
+}
+
+.extrums input {
+    height: 30px;
+    vertical-align: top;
+    border-width: 1px;
+    border-radius: unset;
+}
+.extrums input::placeholder {
+    color: #00000080;
+}
+.extrums [type="submit"] {
+    color: #ffffff;
+    background-color: #000000;
+}
+
+.extrums .query-form input {
+    width: 190px;
+    font-size: 1.3rem;
+}
+
+.extrums .query-result {
+    margin-top: 3rem;
+}
+.extrums .query-result .title .keyword {
+    color: cyan;
+}
+.extrums .query-result .result__table {
+    border-collapse: collapse;
+}
+.extrums .query-result th,
+.extrums .query-result td {
+    width: 160px;
+    border: 1px solid black;
+}
+.extrums .query-result td {
+    padding: 5px;
+}
+.extrums .query-result .table__column h3 {
+    margin: 10px;
+}
+
+.extrums .query-result .replace-form {
+    margin: 10px;
+}
+.extrums .query-result input {
+    width: 120px;
+    min-height: auto;
+    height: 25px;
+}
+.extrums .query-result input + input {
+    margin-top: 5px;
+}
