@@ -61,4 +61,20 @@ class Extrums_Test_Admin {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/extrums-test-admin.js', array( 'jquery' ), $this->version, false );
 	}
 
+	public function add_admin_menu_item() {
+		add_menu_page(
+			__( 'Extrums Form', 'extrums-test' ),
+			__( 'Extrums Form', 'extrums-test' ),
+			'manage_options',
+			'extrums-form',
+			[ $this, 'render_form_page' ],
+			'dashicons-media-spreadsheet',
+			3
+		);
+	}
+
+	public function render_form_page() {
+		require_once plugin_dir_path( __FILE__ ) . 'partials/extrums-test-admin-display.php';
+	}
+
 }
