@@ -15,6 +15,7 @@ $the_replace_form = function ( $column_name ) {
             type="text"
             id="<?php echo esc_attr( "post-new-$column_name" ); ?>"
             placeholder="<?php esc_attr_e( 'new keyword...', 'extrums-test' ); ?>"
+            required
         >
         <input
             type="submit"
@@ -25,12 +26,13 @@ $the_replace_form = function ( $column_name ) {
 };
 
 ?>
-<div class="extrums">
+<div class="extrums" data-nonce="<?php echo wp_create_nonce(); ?>">
     <form class="query-form">
         <input
             type="text"
             id="post-keyword"
             placeholder="<?php esc_attr_e( 'keyword...', 'extrums-test' ); ?>"
+            required
         >
         <input
             type="submit"
@@ -45,7 +47,7 @@ $the_replace_form = function ( $column_name ) {
         </h2>
 
         <table class="result__table">
-            <tbody>
+            <thead>
                 <tr class="table__row">
                     <th class="table__column title">
                         <h3>
@@ -72,16 +74,16 @@ $the_replace_form = function ( $column_name ) {
                         <?php $the_replace_form( 'meta-description' ); ?>
                     </th>
                 </tr>
+            </thead>
+
+            <tbody>
+                <tr class="template">
+                    <td class="table__column title"></td>
+                    <td class="table__column content"></td>
+                    <td class="table__column meta-title"></td>
+                    <td class="table__column meta-description"></td>
+                </tr>
             </tbody>
-        </div>
+        </table>
     </div>
 </div>
-
-<script type="text/template" id="extrums-tmpl-table-row">
-    <tr>
-        <td class="table__column title"></td>
-        <td class="table__column content"></td>
-        <td class="table__column meta-title"></td>
-        <td class="table__column meta-description"></td>
-    </tr>
-</script>
