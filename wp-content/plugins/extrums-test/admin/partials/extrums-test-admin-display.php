@@ -21,6 +21,7 @@ $the_replace_form = function ( $column_name ) {
         <input
             type="submit"
             value="<?php esc_attr_e( 'Replace', 'extrums-test' ); ?>"
+            disabled
         >
     </form>
     <?php
@@ -39,6 +40,7 @@ $the_replace_form = function ( $column_name ) {
         <input
             type="submit"
             value="<?php esc_attr_e( 'Search', 'extrums-test' ); ?>"
+            disabled
         >
     </form>
 
@@ -79,7 +81,7 @@ $the_replace_form = function ( $column_name ) {
             </thead>
 
             <tbody>
-                <tr class="template">
+                <tr class="template" data-post-id="">
                     <td class="table__column title"></td>
                     <td class="table__column content"></td>
                     <td class="table__column meta-title"></td>

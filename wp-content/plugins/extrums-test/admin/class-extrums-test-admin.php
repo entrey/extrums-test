@@ -80,7 +80,7 @@ class Extrums_Test_Admin {
 	public function query_posts() {
 		global $wpdb;
 
-		$keyword = $_POST['keyword'] ?? '';
+		$keyword = sanitize_text_field( $_POST['keyword'] ?? '' );
 
 		if ( ! $keyword ) {
 			return;
@@ -96,7 +96,7 @@ class Extrums_Test_Admin {
 			$join_clause = "LEFT JOIN $seo_table_name AS y ON p.ID = y.object_id";
 		}
 
-		$query = "SELECT $select_clause
+		$query = "SELECT DISTINCT $select_clause
 			FROM {$wpdb->prefix}posts AS p
 			$join_clause
 			WHERE p.post_type = %s
@@ -126,4 +126,50 @@ class Extrums_Test_Admin {
 		return wp_send_json( $posts );
 	}
 
+	public function update_posts_data() {
+		global $wpdb;
+
+		$column_replace = sanitize_text_field( $_POST['column_replace'] ?? '' );
+		$old_keyword = sanitize_text_field( $_POST['old_keyword'] ?? '' );
+		$new_keyword = sanitize_text_field( $_POST['new_keyword'] ?? '' );
+		$posts_ids = sanitize_text_field( $_POST['posts'] ?? '' );
+
+		if ( ! $column_replace || ! $old_keyword || ! $new_keyword || ! $posts_ids ) {
+			return wp_send_json_error();
+		}
+
+		$columns_map = [
+			'title' => 'post_title',
+			'content' => 'post_content',
+			'meta-title' => '',
+			'meta-description' => '',
+		];
+		$column = $columns_map[ $column_replace ];
+		$select_query = $wpdb->prepare(
+			"SELECT ID, {$column}
+				FROM {$wpdb->prefix}posts
+				WHERE ID IN ({$posts_ids});",
+		);
+		$posts = $wpdb->get_results( $select_query );
+
+		$updated_posts_data = [];
+		foreach ( $posts as $post ) {
+			$new_data = str_replace(
+				$old_keyword,
+				$new_keyword,
+				strtolower( $post->{$column} )
+			);
+
+			$update_query = $wpdb->prepare(
+				"UPDATE {$wpdb->prefix}posts
+					SET {$column} = %s
+					WHERE ID = {$post->ID};",
+				$new_data
+			);
+			$wpdb->query( $update_query );
+
+			$updated_posts_data[ $post->ID ] = $new_data;
+		}
+
+		return wp_send_json_success( $updated_posts_data );
 }

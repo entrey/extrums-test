@@ -97,6 +97,7 @@ class Extrums_Test {
 
 		if ( wp_doing_ajax() ) {
 			$this->loader->add_action( 'wp_ajax_extrums_query_posts', $plugin_admin, 'query_posts' );
+			$this->loader->add_action( 'wp_ajax_extrums_update_posts_data', $plugin_admin, 'update_posts_data' );
 		}
 	}
 

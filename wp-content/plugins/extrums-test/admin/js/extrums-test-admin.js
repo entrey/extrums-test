@@ -9,6 +9,7 @@ class ExtrumsManager {
 	constructor() {
 		this.defineVariables()
 		this.setListeners()
+		this.enableForms()
 	}
 
 	defineVariables() {
@@ -47,65 +48,7 @@ class ExtrumsManager {
 		setSubmitListener.call(this)
 
 		function setSubmitListener() {
-			this.queryForm.addEventListener('submit', handleSubmitEvent.bind(this))
-		}
-
-		function handleSubmitEvent(e) {
-			e.preventDefault()
-
-			const keyword = this.queryForm.keywordInput.value.trim()
-
-			if (!keyword) {
-				return
-			}
-
-			this.queryForm.submitBtn.value = 'Downloading...'
-
-			fetch(ajaxurl, {
-				method: 'POST',
-				body: getBody(),
-			})
-				.then((response) => response.json())
-				.then((posts) => updateResultsTable.call(this, posts))
-				.catch((error) => console.error('Error: ', error))
-				.finally(() => {
-					this.queryForm.keywordInput.value = ''
-					this.queryForm.submitBtn.value = 'Search'
-				})
-
-			function getBody() {
-				const body = new FormData()
-				body.append('action', 'extrums_query_posts')
-				body.append('keyword', keyword)
-				return body
-			}
-
-			function updateResultsTable(posts) {
-				updateTitleKeyword.call(this)
-				clearRows.call(this)
-				renderNewRows.call(this)
-
-				function updateTitleKeyword() {
-					this.titleKeyword.textContent = keyword
-				}
-
-				function clearRows() {
-					this.postsTable.tbody.textContent = ''
-				}
-
-				function renderNewRows() {
-					posts.forEach((post) => {
-						const newRow = this.postsTable.rowTemplate.cloneNode(true)
-
-						post.post_title && (newRow.querySelector('.title').textContent = post.post_title)
-						post.post_content && (newRow.querySelector('.content').textContent = post.post_content)
-						post.title && (newRow.querySelector('.meta-title').textContent = post.title)
-						post.description && (newRow.querySelector('.meta-description').textContent = post.description)
-
-						this.postsTable.tbody.insertAdjacentElement('beforeEnd', newRow)
-					})
-				}
-			}
+			this.queryForm.addEventListener('submit', this.handleQueryFormSubmit.bind(this))
 		}
 	}
 
@@ -113,25 +56,136 @@ class ExtrumsManager {
 		setSubmitListener.call(this)
 
 		function setSubmitListener() {
-			this.postsTable.addEventListener('submit', handleSubmitEvent.bind(this))
+			this.postsTable.addEventListener('submit', this.handlePostsTableSubmit.bind(this))
+		}
+	}
+
+	enableForms() {
+		document
+			.querySelectorAll('[type="submit"][disabled]')
+			.forEach((submit) => submit.removeAttribute('disabled'))
+	}
+
+	handleQueryFormSubmit(e) {
+		e.preventDefault()
+
+		const keyword = this.queryForm.keywordInput.value.trim()
+
+		if (!keyword) {
+			return
 		}
 
-		function handleSubmitEvent(e) {
-			e.preventDefault()
+		this.queryForm.submitBtn.value = 'Downloading...'
 
-			const columnReplace = e.target.dataset.columnReplace
-			const replaceKeyword = e.target.querySelector('[name="new-keyword"]').value.trim()
+		fetch(ajaxurl, {
+			method: 'POST',
+			body: getBody(),
+		})
+			.then((response) => response.json())
+			.then((posts) => updateResultsTable.call(this, posts))
+			.catch((error) => console.error(`Error: ${error}`))
+			.finally(() => {
+				this.queryForm.keywordInput.value = ''
+				this.queryForm.submitBtn.value = 'Search'
+			})
 
-			if (!columnReplace || !replaceKeyword) {
-				return
+		function getBody() {
+			const body = new FormData()
+			body.append('action', 'extrums_query_posts')
+			body.append('keyword', keyword)
+			return body
+		}
+
+		function updateResultsTable(posts) {
+			updateTitleKeyword.call(this)
+			clearRows.call(this)
+			renderNewRows.call(this)
+
+			function updateTitleKeyword() {
+				this.titleKeyword.textContent = keyword
 			}
 
+			function clearRows() {
+				this.postsTable.tbody.textContent = ''
+			}
+
+			function renderNewRows() {
+				posts.forEach((post) => {
+					const newRow = this.postsTable.rowTemplate.cloneNode(true)
+
+					newRow.dataset.postId = post.ID
+					post.post_title && (newRow.querySelector('.title').textContent = post.post_title)
+					post.post_content && (newRow.querySelector('.content').textContent = post.post_content)
+					post.title && (newRow.querySelector('.meta-title').textContent = post.title)
+					post.description && (newRow.querySelector('.meta-description').textContent = post.description)
+
+					this.postsTable.tbody.insertAdjacentElement('beforeEnd', newRow)
+				})
+			}
+		}
+	}
+
+	handlePostsTableSubmit(e) {
+		e.preventDefault()
+
+		const columnReplace = e.target.dataset.columnReplace
+		const currentKeyword = this.titleKeyword.textContent
+		const newKeywordInput = e.target.querySelector('[name="new-keyword"]')
+		const replaceKeyword = newKeywordInput.value.trim()
+		const submitBtn = e.target.querySelector('[type="submit"]')
+
+		if (!columnReplace || !replaceKeyword) {
+			return
+		}
+
+		submitBtn.value = 'Replacing...'
+
+		fetch(ajaxurl, {
+			method: 'POST',
+			body: getBody.call(this),
+		})
+			.then((response) => response.json())
+			.then((result) => updatePostsTable.call(this, result.data))
+			.catch((error) => console.error(`Error: ${error}`))
+			.finally(() => {
+				newKeywordInput.value = ''
+				submitBtn.value = 'Replace'
+			})
+
+		function getBody() {
+			const body = new FormData()
+			body.append('action', 'extrums_update_posts_data')
+			body.append('column_replace', columnReplace)
+			body.append('old_keyword', this.titleKeyword.textContent)
+			body.append('new_keyword', replaceKeyword)
+			body.append('posts', getPostsForReplace.call(this))
+			return body
+		}
+
+		function getPostsForReplace() {
+			const postIDs = []
 			this.postsTable.tbody
 				.querySelectorAll(`.table__column.${columnReplace}`)
 				.forEach((td) => {
-					const currentKeyword = this.titleKeyword.textContent
-					td.textContent = td.textContent.replace(new RegExp(currentKeyword, 'g'), replaceKeyword)
-				})
+					if (!td.textContent.toLowerCase().includes(currentKeyword)) {
+						return
+					}
+					const postId = td.closest('tr').dataset.postId
+					return postIDs.push(postId)
+				}, [])
+			return postIDs
+		}
+
+		function updatePostsTable(posts) {
+			if (!posts) {
+				return
+			}
+
+			for (const ID in posts) {
+				this.postsTable.tbody
+					.querySelectorAll(`tr[data-post-id="${ID}"] .table__column.${columnReplace}`)
+					.forEach((td) => td.textContent = posts[ID])
+			}
 		}
 	}
 
