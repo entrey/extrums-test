@@ -27,6 +27,7 @@ class ExtrumsManager {
 	defineResultTableVariables() {
 		this.titleKeyword = this.container.querySelector('.title .keyword')
 		this.postsTable = this.container.querySelector('.result__table')
+		this.postsTable.tbody = this.postsTable.querySelector('tbody')
 		this.postsTable.rowTemplate = getRowTemplate('tr.template')
 
 		function getRowTemplate() {
@@ -90,7 +91,7 @@ class ExtrumsManager {
 				}
 
 				function clearRows() {
-					this.postsTable.querySelector('tbody').textContent = ''
+					this.postsTable.tbody.textContent = ''
 				}
 
 				function renderNewRows() {
@@ -102,7 +103,7 @@ class ExtrumsManager {
 						post.title && (newRow.querySelector('.meta-title').textContent = post.title)
 						post.description && (newRow.querySelector('.meta-description').textContent = post.description)
 
-						this.postsTable.querySelector('tbody').insertAdjacentElement('beforeEnd', newRow)
+						this.postsTable.tbody.insertAdjacentElement('beforeEnd', newRow)
 					})
 				}
 			}
@@ -119,6 +120,19 @@ class ExtrumsManager {
 		function handleSubmitEvent(e) {
 			e.preventDefault()
 
+			const columnReplace = e.target.dataset.columnReplace
+			const replaceKeyword = e.target.querySelector('[name="new-keyword"]').value.trim()
+
+			if (!columnReplace || !replaceKeyword) {
+				return
+			}
+
+			this.postsTable.tbody
+				.querySelectorAll(`.table__column.${columnReplace}`)
+				.forEach((td) => {
+					const currentKeyword = this.titleKeyword.textContent
+					td.textContent = td.textContent.replace(new RegExp(currentKeyword, 'g'), replaceKeyword)
+				})
 		}
 	}
 

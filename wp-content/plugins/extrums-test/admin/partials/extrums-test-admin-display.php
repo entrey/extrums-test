@@ -10,9 +10,10 @@
 
 $the_replace_form = function ( $column_name ) {
     ?>
-    <form class="replace-form">
+    <form class="replace-form" data-column-replace="<?php echo esc_attr( $column_name ); ?>">
         <input
             type="text"
+            name="new-keyword"
             id="<?php echo esc_attr( "post-new-$column_name" ); ?>"
             placeholder="<?php esc_attr_e( 'new keyword...', 'extrums-test' ); ?>"
             required
@@ -30,6 +31,7 @@ $the_replace_form = function ( $column_name ) {
     <form class="query-form">
         <input
             type="text"
+            name="keyword"
             id="post-keyword"
             placeholder="<?php esc_attr_e( 'keyword...', 'extrums-test' ); ?>"
             required
