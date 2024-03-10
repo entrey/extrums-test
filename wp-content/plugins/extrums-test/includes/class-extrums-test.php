@@ -73,6 +73,8 @@ class Extrums_Test {
 		/** Actions of admin area. */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-extrums-test-admin.php';
 
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-extrums-db-manager.php';
+
 		/** Actions of public-facing side. */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-extrums-test-public.php';
 
@@ -90,14 +92,15 @@ class Extrums_Test {
 
 	private function define_admin_hooks() {
 		$plugin_admin = new Extrums_Test_Admin( $this->get_plugin_name(), $this->get_version() );
+		$db_manager = new Extrums_DB_Manager();
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_admin_menu_item' );
 
 		if ( wp_doing_ajax() ) {
-			$this->loader->add_action( 'wp_ajax_extrums_query_posts', $plugin_admin, 'query_posts' );
-			$this->loader->add_action( 'wp_ajax_extrums_update_posts_data', $plugin_admin, 'update_posts_data' );
+			$this->loader->add_action( 'wp_ajax_extrums_query_posts', $db_manager, 'query_posts' );
+			$this->loader->add_action( 'wp_ajax_extrums_update_posts_data', $db_manager, 'update_posts_data' );
 		}
 	}
 

@@ -10,6 +10,10 @@
 /wp-*.php
 /xmlrpc.php
 
+#WP Content
+wp-content/plugins/*
+!wp-content/plugins/
+
 # Themes whitelist
 #/wp-content/themes
 
