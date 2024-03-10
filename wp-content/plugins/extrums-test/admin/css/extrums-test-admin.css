@@ -36,6 +36,7 @@
     border: 1px solid black;
 }
 .extrums .query-result td {
+    height: 50px;
     padding: 5px;
 }
 .extrums .query-result .table__column h3 {

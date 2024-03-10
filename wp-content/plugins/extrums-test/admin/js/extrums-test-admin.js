@@ -34,7 +34,6 @@ class ExtrumsManager {
 			const template = document.querySelector('tr.template')
 			const tr = template.cloneNode(true)
 			tr.classList.remove('template')
-			template.remove()
 			return tr
 		}
 	}
