@@ -99,8 +99,8 @@ class ExtrumsManager {
 
 						post.post_title && (newRow.querySelector('.title').textContent = post.post_title)
 						post.post_content && (newRow.querySelector('.content').textContent = post.post_content)
-						post['meta-title'] && (newRow.querySelector('.meta-title').textContent = post['meta-title'])
-						post['meta-description'] && (newRow.querySelector('.meta-description').textContent = post['meta-description'])
+						post.title && (newRow.querySelector('.meta-title').textContent = post.title)
+						post.description && (newRow.querySelector('.meta-description').textContent = post.description)
 
 						this.postsTable.querySelector('tbody').insertAdjacentElement('beforeEnd', newRow)
 					})

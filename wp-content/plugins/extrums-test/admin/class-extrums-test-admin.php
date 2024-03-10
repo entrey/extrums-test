@@ -77,4 +77,53 @@ class Extrums_Test_Admin {
 		require_once plugin_dir_path( __FILE__ ) . 'partials/extrums-test-admin-display.php';
 	}
 
+	public function query_posts() {
+		global $wpdb;
+
+		$keyword = $_POST['keyword'] ?? '';
+
+		if ( ! $keyword ) {
+			return;
+		}
+
+		$seo_table_name = $wpdb->prefix . 'yoast_indexable';
+		$seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$seo_table_name'" ) !== null;
+
+		$select_clause = 'p.ID, p.post_title, p.post_content';
+		$join_clause = '';
+		if ( $seo_table_exists ) {
+			$select_clause .= ', y.title, y.description';
+			$join_clause = "LEFT JOIN $seo_table_name AS y ON p.ID = y.object_id";
+		}
+
+		$query = "SELECT $select_clause
+			FROM {$wpdb->prefix}posts AS p
+			$join_clause
+			WHERE p.post_type = %s
+			AND (
+				p.post_title LIKE %s
+				OR p.post_content LIKE %s";
+
+		if ( $seo_table_exists ) {
+			$query .= " OR y.title LIKE %s OR y.description LIKE %s";
+		}
+
+		$query .= " )";
+
+		$like_keyword = '%' . $wpdb->esc_like( $keyword ) . '%';
+		$args = [
+			'post',
+			$like_keyword,
+			$like_keyword
+		];
+		if ( $seo_table_exists ) {
+			$args[] = $like_keyword;
+			$args[] = $like_keyword;
+		}
+
+		$query = $wpdb->prepare( $query, $args );
+		$posts = $wpdb->get_results( $query );
+		return wp_send_json( $posts );
+	}
+
 }
