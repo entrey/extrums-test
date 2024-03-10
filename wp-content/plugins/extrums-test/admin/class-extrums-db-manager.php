@@ -27,11 +27,11 @@ class Extrums_DB_Manager {
 			return;
 		}
 
-		$seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$this->seo_table_name}'" ) !== null;
+		$is_yoast_seo_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 
 		$select_clause = 'p.ID, p.post_title, p.post_content';
 		$join_clause = '';
-		if ( $seo_table_exists ) {
+		if ( $is_yoast_seo_active ) {
 			$select_clause .= ', y.title, y.description';
 			$join_clause = "LEFT JOIN {$this->seo_table_name} AS y ON p.ID = y.object_id";
 		}
@@ -44,7 +44,7 @@ class Extrums_DB_Manager {
 				p.post_title LIKE %s
 				OR p.post_content LIKE %s";
 
-		if ( $seo_table_exists ) {
+		if ( $is_yoast_seo_active ) {
 			$query .= " OR y.title LIKE %s OR y.description LIKE %s";
 		}
 
@@ -56,7 +56,7 @@ class Extrums_DB_Manager {
 			$like_keyword,
 			$like_keyword
 		];
-		if ( $seo_table_exists ) {
+		if ( $is_yoast_seo_active ) {
 			$args[] = $like_keyword;
 			$args[] = $like_keyword;
 		}
@@ -92,11 +92,6 @@ class Extrums_DB_Manager {
 
             case 'meta-title':
             case 'meta-description':
-                global $wpdb;
-                $seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$this->seo_table_name}'" ) !== null;
-                if ( ! $seo_table_exists ) {
-                    return wp_send_json_error();
-                }
 				$this->update_yoast_seo_table_data();
                 break;
 
@@ -140,6 +135,11 @@ class Extrums_DB_Manager {
 
 	public function update_yoast_seo_table_data() {
 		global $wpdb;
+
+		$is_yoast_seo_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
+		if ( ! $is_yoast_seo_active ) {
+			return wp_send_json_error();
+		}
 
 		$select_query = $wpdb->prepare(
 			"SELECT p.ID, y.{$this->column}
