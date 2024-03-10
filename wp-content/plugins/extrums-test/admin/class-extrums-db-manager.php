@@ -6,10 +6,17 @@
  */
 class Extrums_DB_Manager {
 
+    protected $seo_table_name;
     protected $column;
     protected $old_keyword;
     protected $new_keyword;
     protected $posts_ids;
+
+
+	public function __construct() {
+        global $wpdb;
+        $this->seo_table_name = $wpdb->prefix . 'yoast_indexable';
+    }
 
 	public function query_posts() {
 		global $wpdb;
@@ -20,14 +27,13 @@ class Extrums_DB_Manager {
 			return;
 		}
 
-		$seo_table_name = $wpdb->prefix . 'yoast_indexable';
-		$seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$seo_table_name'" ) !== null;
+		$seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$this->seo_table_name}'" ) !== null;
 
 		$select_clause = 'p.ID, p.post_title, p.post_content';
 		$join_clause = '';
 		if ( $seo_table_exists ) {
 			$select_clause .= ', y.title, y.description';
-			$join_clause = "LEFT JOIN $seo_table_name AS y ON p.ID = y.object_id";
+			$join_clause = "LEFT JOIN {$this->seo_table_name} AS y ON p.ID = y.object_id";
 		}
 
 		$query = "SELECT DISTINCT $select_clause
@@ -73,13 +79,31 @@ class Extrums_DB_Manager {
 		$columns_map = [
 			'title' => 'post_title',
 			'content' => 'post_content',
-			'meta-title' => '',
-			'meta-description' => '',
+			'meta-title' => 'title',
+			'meta-description' => 'description',
 		];
 		$this->column = $columns_map[ $column_replace ];
 
-		$result = $this->update_posts_table_data();
-		return wp_send_json_success( $result );
+        switch ( $column_replace ) {
+            case 'title':
+            case 'content':
+				$this->update_posts_table_data();
+                break;
+
+            case 'meta-title':
+            case 'meta-description':
+                global $wpdb;
+                $seo_table_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$this->seo_table_name}'" ) !== null;
+                if ( ! $seo_table_exists ) {
+                    return wp_send_json_error();
+                }
+				$this->update_yoast_seo_table_data();
+                break;
+
+            default:
+                throw new Exception( "Error Processing Request" );
+                break;
+        }
 	}
 
 	public function update_posts_table_data() {
@@ -113,6 +137,15 @@ class Extrums_DB_Manager {
 
 		return wp_send_json_success( $updated_posts_data );
 	}
+
+	public function update_yoast_seo_table_data() {
+		global $wpdb;
+
+		$select_query = $wpdb->prepare(
+			"SELECT p.ID, y.{$this->column}
+				FROM {$wpdb->prefix}posts AS p
+				LEFT JOIN {$this->seo_table_name} AS y ON p.ID = y.object_id
+				WHERE p.ID IN ({$this->posts_ids});"
 		);
 		$posts = $wpdb->get_results( $select_query );
 
@@ -125,9 +158,9 @@ class Extrums_DB_Manager {
 			);
 
 			$update_query = $wpdb->prepare(
-				"UPDATE {$wpdb->prefix}posts
+				"UPDATE {$this->seo_table_name}
 					SET {$this->column} = %s
-					WHERE ID = {$post->ID};",
+					WHERE object_id = {$post->ID};",
 				$new_data
 			);
 			$wpdb->query( $update_query );
