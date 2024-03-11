@@ -79,7 +79,7 @@ class ExtrumsManager {
 
 		fetch(ajaxurl, {
 			method: 'POST',
-			body: getBody(),
+			body: getBody.call(this),
 		})
 			.then((response) => response.json())
 			.then((posts) => updateResultsTable.call(this, posts))
@@ -92,6 +92,7 @@ class ExtrumsManager {
 		function getBody() {
 			const body = new FormData()
 			body.append('action', 'extrums_query_posts')
+			body.append('nonce', this.container.nonce)
 			body.append('keyword', keyword)
 			return body
 		}
@@ -155,6 +156,7 @@ class ExtrumsManager {
 		function getBody() {
 			const body = new FormData()
 			body.append('action', 'extrums_update_posts_data')
+			body.append('nonce', this.container.nonce)
 			body.append('column_replace', columnReplace)
 			body.append('old_keyword', this.titleKeyword.textContent)
 			body.append('new_keyword', replaceKeyword)

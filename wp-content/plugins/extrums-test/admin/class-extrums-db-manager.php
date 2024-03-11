@@ -22,8 +22,12 @@ class Extrums_DB_Manager {
 		global $wpdb;
 
 		$keyword = sanitize_text_field( $_POST['keyword'] ?? '' );
+		$nonce = $_POST['nonce'] ?? '';
 
-		if ( ! $keyword ) {
+		if (
+			! $keyword
+			|| ! wp_verify_nonce( $nonce )
+		) {
 			return;
 		}
 
@@ -67,12 +71,16 @@ class Extrums_DB_Manager {
 	}
 
 	public function update_posts_data() {
+		$nonce = $_POST['nonce'] ?? '';
 		$column_replace = sanitize_text_field( $_POST['column_replace'] ?? '' );
 		$this->old_keyword = sanitize_text_field( $_POST['old_keyword'] ?? '' );
 		$this->new_keyword = sanitize_text_field( $_POST['new_keyword'] ?? '' );
 		$this->posts_ids = sanitize_text_field( $_POST['posts'] ?? '' );
 
-		if ( ! $column_replace || ! $this->old_keyword || ! $this->new_keyword || ! $this->posts_ids ) {
+		if (
+			! $column_replace || ! $this->old_keyword || ! $this->new_keyword || ! $this->posts_ids
+			|| ! wp_verify_nonce( $nonce )
+		) {
 			return wp_send_json_error();
 		}
 
@@ -104,12 +112,11 @@ class Extrums_DB_Manager {
 	public function update_posts_table_data() {
 		global $wpdb;
 
-		$select_query = $wpdb->prepare(
+		$posts = $wpdb->get_results(
 			"SELECT ID, {$this->column}
 				FROM {$wpdb->prefix}posts
 				WHERE ID IN ({$this->posts_ids});"
 		);
-		$posts = $wpdb->get_results( $select_query );
 
 		$updated_posts_data = [];
 		foreach ( $posts as $post ) {
@@ -141,13 +148,12 @@ class Extrums_DB_Manager {
 			return wp_send_json_error();
 		}
 
-		$select_query = $wpdb->prepare(
+		$posts = $wpdb->get_results(
 			"SELECT p.ID, y.{$this->column}
 				FROM {$wpdb->prefix}posts AS p
 				LEFT JOIN {$this->seo_table_name} AS y ON p.ID = y.object_id
 				WHERE p.ID IN ({$this->posts_ids});"
 		);
-		$posts = $wpdb->get_results( $select_query );
 
 		$updated_posts_data = [];
 		foreach ( $posts as $post ) {
